@@ -1,0 +1,18 @@
+defaults:
+  - /module@module: basic_module_config
+  - /dataloader@train_dataloader: train_data_config
+  - /dataloader@val_dataloader: val_data_config
+  - /dataloader@test_dataloader: test_data_config
+  - /trainer@trainer: trainer_config
+
+seed: 42
+
+hydra:
+  run:
+    dir: ./outputs/train
+
+proj_dir: ../../
+
+ckpt_path: null
+# ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/version_3/checkpoints/last.ckpt
+resume_training: true # will be ignored if ckpt_path is null

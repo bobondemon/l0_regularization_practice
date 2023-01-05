@@ -1,0 +1,9 @@
+defaults:
+  - /model@model: googlenet
+
+_target_: sparsereg.module.basic_module.CIFARModule
+# We will support Adam or SGD as optimizers.
+optimizer_name: Adam
+optimizer_hparams:
+  lr: 1e-3
+  weight_decay: 1e-4

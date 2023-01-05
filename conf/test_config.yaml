@@ -1,0 +1,14 @@
+defaults:
+  - /module@module: basic_module_config
+  - /dataloader@test_dataloader: test_data_config
+  - /trainer@trainer: trainer_config
+
+seed: 42
+
+hydra:
+  run:
+    dir: ./outputs/test
+
+proj_dir: ../../
+
+ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/version_4/checkpoints/last.ckpt

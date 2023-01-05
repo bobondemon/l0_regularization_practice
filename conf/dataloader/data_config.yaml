@@ -1,0 +1,10 @@
+_target_: sparsereg.dataloader.cifar10_dataset_and_loader.CIFAR10TrainDataLoader
+dataset:
+  _target_: sparsereg.dataloader.cifar10_dataset_and_loader.CIFAR10Dataset
+  root: ../data
+  types: train
+batch_size: 128
+num_workers: 0
+loader_kwargs:
+  drop_last: true
+  pin_memory: true

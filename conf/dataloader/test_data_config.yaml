@@ -1,0 +1,10 @@
+_target_: sparsereg.dataloader.cifar10_dataset_and_loader.CIFAR10ValTestDataLoader
+dataset:
+  _target_: sparsereg.dataloader.cifar10_dataset_and_loader.CIFAR10Dataset
+  root: ${proj_dir}/data
+  types: test
+batch_size: 128
+num_workers: 0
+# loader_kwargs:
+#   shuffle: false
+#   drop_last: false
