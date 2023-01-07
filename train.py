@@ -20,7 +20,7 @@ def train(cfg: DictConfig) -> None:
         ckpt = torch.load(ckpt_path, map_location="cpu")
         module.load_state_dict(ckpt["state_dict"], strict=False)
         if cfg.resume_training and not cfg.without_using_gate:
-            assert 1==2, "[Error]: resume_training should be false if you let without_using_gate=false"
+            assert 1 == 2, "[Error]: resume_training should be false if you let without_using_gate=false"
         if cfg.resume_training and cfg.without_using_gate:
             print("[Info]: Resume Training ...")
             OmegaConf.set_struct(cfg_trainer, False)

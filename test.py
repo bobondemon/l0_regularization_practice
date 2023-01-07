@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from pathlib import Path
 
 
-@hydra.main(config_path="conf", config_name="test_config")
+@hydra.main(version_base=None, config_path="conf", config_name="test_config")
 def test(cfg: DictConfig) -> None:
     pl.seed_everything(cfg.seed)
     module = hydra.utils.instantiate(cfg.module)

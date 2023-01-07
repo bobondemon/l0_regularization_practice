@@ -12,4 +12,6 @@ hydra:
 proj_dir: .
 train_or_test: test
 
-ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/version_4/checkpoints/last.ckpt
+ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/version_1/checkpoints/last.ckpt
+
+without_using_gate: false # Neither true or false will not effect the l0gate parameters anyway
