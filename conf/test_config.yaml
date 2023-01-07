@@ -9,6 +9,7 @@ hydra:
   run:
     dir: ./outputs/test
 
-proj_dir: ../../
+proj_dir: .
+train_or_test: test
 
 ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/version_4/checkpoints/last.ckpt

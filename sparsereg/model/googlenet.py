@@ -1,14 +1,17 @@
 from types import SimpleNamespace
+from functools import partial
 
 import torch
 from torch import nn
+
+from sparsereg.model.basic_l0_blocks import L0Gate
 
 
 act_fn_by_name = {"tanh": nn.Tanh, "relu": nn.ReLU, "leakyrelu": nn.LeakyReLU, "gelu": nn.GELU}
 
 
 class InceptionBlock(nn.Module):
-    def __init__(self, c_in, c_red: dict, c_out: dict, act_fn):
+    def __init__(self, c_in, c_red: dict, c_out: dict, act_fn, fix_and_open_gate=True):
         """
         Inputs:
             c_in - Number of input feature maps from the previous layers
@@ -22,6 +25,7 @@ class InceptionBlock(nn.Module):
         self.conv_1x1 = nn.Sequential(
             nn.Conv2d(c_in, c_out["1x1"], kernel_size=1), nn.BatchNorm2d(c_out["1x1"]), act_fn()
         )
+        self.conv_1x1_gate = L0Gate(c_out["1x1"], fix_and_open_gate=fix_and_open_gate)
 
         # 3x3 convolution branch
         self.conv_3x3 = nn.Sequential(
@@ -32,6 +36,7 @@ class InceptionBlock(nn.Module):
             nn.BatchNorm2d(c_out["3x3"]),
             act_fn(),
         )
+        self.conv_3x3_gate = L0Gate(c_out["3x3"], fix_and_open_gate=fix_and_open_gate)
 
         # 5x5 convolution branch
         self.conv_5x5 = nn.Sequential(
@@ -42,6 +47,7 @@ class InceptionBlock(nn.Module):
             nn.BatchNorm2d(c_out["5x5"]),
             act_fn(),
         )
+        self.conv_5x5_gate = L0Gate(c_out["5x5"], fix_and_open_gate=fix_and_open_gate)
 
         # Max-pool branch
         self.max_pool = nn.Sequential(
@@ -50,24 +56,29 @@ class InceptionBlock(nn.Module):
             nn.BatchNorm2d(c_out["max"]),
             act_fn(),
         )
+        self.max_pool_gate = L0Gate(c_out["max"], fix_and_open_gate=fix_and_open_gate)
 
     def forward(self, x):
-        x_1x1 = self.conv_1x1(x)
-        x_3x3 = self.conv_3x3(x)
-        x_5x5 = self.conv_5x5(x)
-        x_max = self.max_pool(x)
+        x_1x1 = self.conv_1x1_gate(self.conv_1x1(x))
+        x_3x3 = self.conv_3x3_gate(self.conv_3x3(x))
+        x_5x5 = self.conv_5x5_gate(self.conv_5x5(x))
+        x_max = self.max_pool_gate(self.max_pool(x))
         x_out = torch.cat([x_1x1, x_3x3, x_5x5, x_max], dim=1)
         return x_out
 
 
 class GoogleNet(nn.Module):
-    def __init__(self, num_classes=10, act_fn_name="relu", **kwargs):
+    def __init__(self, num_classes=10, act_fn_name="relu", fix_and_open_gate=True, **kwargs):
         super().__init__()
         self.hparams = SimpleNamespace(
             num_classes=num_classes, act_fn_name=act_fn_name, act_fn=act_fn_by_name[act_fn_name]
         )
+        self.fix_and_open_gate = fix_and_open_gate
+        self.inception_block = partial(InceptionBlock, fix_and_open_gate=fix_and_open_gate)
         self._create_network()
         self._init_params()
+
+        self.l0_modules = [m for m in self.modules() if type(m) is L0Gate]
 
     def _create_network(self):
         # A first convolution on the original image to scale up the channel size
@@ -76,51 +87,51 @@ class GoogleNet(nn.Module):
         )
         # Stacking inception blocks
         self.inception_blocks = nn.Sequential(
-            InceptionBlock(
+            self.inception_block(
                 64,
                 c_red={"3x3": 32, "5x5": 16},
                 c_out={"1x1": 16, "3x3": 32, "5x5": 8, "max": 8},
                 act_fn=self.hparams.act_fn,
             ),
-            InceptionBlock(
+            self.inception_block(
                 64,
                 c_red={"3x3": 32, "5x5": 16},
                 c_out={"1x1": 24, "3x3": 48, "5x5": 12, "max": 12},
                 act_fn=self.hparams.act_fn,
             ),
             nn.MaxPool2d(3, stride=2, padding=1),  # 32x32 => 16x16
-            InceptionBlock(
+            self.inception_block(
                 96,
                 c_red={"3x3": 32, "5x5": 16},
                 c_out={"1x1": 24, "3x3": 48, "5x5": 12, "max": 12},
                 act_fn=self.hparams.act_fn,
             ),
-            InceptionBlock(
+            self.inception_block(
                 96,
                 c_red={"3x3": 32, "5x5": 16},
                 c_out={"1x1": 16, "3x3": 48, "5x5": 16, "max": 16},
                 act_fn=self.hparams.act_fn,
             ),
-            InceptionBlock(
+            self.inception_block(
                 96,
                 c_red={"3x3": 32, "5x5": 16},
                 c_out={"1x1": 16, "3x3": 48, "5x5": 16, "max": 16},
                 act_fn=self.hparams.act_fn,
             ),
-            InceptionBlock(
+            self.inception_block(
                 96,
                 c_red={"3x3": 32, "5x5": 16},
                 c_out={"1x1": 32, "3x3": 48, "5x5": 24, "max": 24},
                 act_fn=self.hparams.act_fn,
             ),
             nn.MaxPool2d(3, stride=2, padding=1),  # 16x16 => 8x8
-            InceptionBlock(
+            self.inception_block(
                 128,
                 c_red={"3x3": 48, "5x5": 16},
                 c_out={"1x1": 32, "3x3": 64, "5x5": 16, "max": 16},
                 act_fn=self.hparams.act_fn,
             ),
-            InceptionBlock(
+            self.inception_block(
                 128,
                 c_red={"3x3": 48, "5x5": 16},
                 c_out={"1x1": 32, "3x3": 64, "5x5": 16, "max": 16},
@@ -147,3 +158,26 @@ class GoogleNet(nn.Module):
         x = self.inception_blocks(x)
         x = self.output_net(x)
         return x
+
+    def reset_l0_parameters(self):
+        if not self.fix_and_open_gate:
+            for m in self.l0_modules:
+                m.reset_parameters()
+        else:
+            print(
+                f"[Warning]: Do nothing because `fix_and_open_gate` is True, which means the gate parameter is NOT learnable, and set as open"
+            )
+
+    def regularization(self):
+        if self.fix_and_open_gate:
+            # No L0 regularization
+            return torch.tensor(0.0)
+        # [TODO]: should implement l0 and/or l2
+        reg = 0.0
+        dim = 0
+        for m in self.l0_modules:
+            reg += m.regularization()
+            dim += m.mask_dim
+
+        # print(reg, dim)
+        return reg / dim

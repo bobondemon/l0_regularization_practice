@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 from pathlib import Path
 
 
-@hydra.main(config_path="conf", config_name="train_config")
+@hydra.main(version_base=None, config_path="conf", config_name="train_config")
 def train(cfg: DictConfig) -> None:
     pl.seed_everything(cfg.seed)
     module = hydra.utils.instantiate(cfg.module)
@@ -15,10 +15,13 @@ def train(cfg: DictConfig) -> None:
     if cfg.ckpt_path is not None:
         print(f"Path.cwd()={Path.cwd()}")
         ckpt_path = Path.cwd() / cfg.ckpt_path
+        logging.info(f"[Info]: Load from ckpt path = {ckpt_path}")
         print(f"[Info]: Load from ckpt path = {ckpt_path}")
         ckpt = torch.load(ckpt_path, map_location="cpu")
         module.load_state_dict(ckpt["state_dict"], strict=False)
-        if cfg.resume_training:
+        if cfg.resume_training and not cfg.without_using_gate:
+            assert 1==2, "[Error]: resume_training should be false if you let without_using_gate=false"
+        if cfg.resume_training and cfg.without_using_gate:
             print("[Info]: Resume Training ...")
             OmegaConf.set_struct(cfg_trainer, False)
             cfg_trainer["resume_from_checkpoint"] = cfg.ckpt_path

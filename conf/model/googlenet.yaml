@@ -1,4 +1,5 @@
 _target_:  sparsereg.model.googlenet.GoogleNet
 num_classes: 10
 act_fn_name: relu
+fix_and_open_gate: ${without_using_gate}
 

@@ -5,6 +5,9 @@ import torch.nn as nn
 import torch.optim as optim
 import pytorch_lightning as pl
 
+# [Debug]
+from sparsereg.model.basic_l0_blocks import L0Gate
+
 
 class CIFARModule(pl.LightningModule):
     def __init__(self, model, optimizer_name, optimizer_hparams):
@@ -20,10 +23,21 @@ class CIFARModule(pl.LightningModule):
         self.save_hyperparameters()
         # Create model
         self.model = copy.deepcopy(model)
+
+        # [Debug]: monitoring MaskL0 parameters
+        self.l0gate_moduels = None
+        if not self.model.fix_and_open_gate:
+            self.l0gate_moduels = [m for m in self.modules() if type(m) is L0Gate]
+
         # Create loss module
         self.loss_module = nn.CrossEntropyLoss()
         # Example input for visualizing the graph in Tensorboard
         self.example_input_array = torch.zeros((1, 3, 32, 32), dtype=torch.float32)
+
+    def on_train_start(self) -> None:
+        if not self.model.fix_and_open_gate:
+            # which means we want to use l0_gating module for learning, so we need to reset the l0 parameters
+            self.model.reset_l0_parameters()
 
     def forward(self, imgs):
         # Forward function that is run when visualizing the graph
@@ -48,12 +62,26 @@ class CIFARModule(pl.LightningModule):
         # "batch" is the output of the training data loader.
         imgs, labels = batch
         preds = self.model(imgs)
-        loss = self.loss_module(preds, labels)
-        acc = (preds.argmax(dim=-1) == labels).float().mean()
+        reg = self.model.regularization()
+        acc_loss = self.loss_module(preds, labels)
+        loss = acc_loss + reg
+        loss_dict = {"train_loss": loss, "acc_loss": acc_loss, "reg": reg}
+        self.log_dict(loss_dict)
 
+        # [Debug]: monitoring one MaskL0 module's parameters
+        if self.l0gate_moduels is not None:
+            log_l0_param_dict = {
+                "l0_module0_param0": self.l0gate_moduels[0].qz_loga[0],
+                "l0_module0_paramlast": self.l0gate_moduels[0].qz_loga[-1],
+                "l0_module10_param0": self.l0gate_moduels[10].qz_loga[0],
+                "l0_module10_paramlast": self.l0gate_moduels[10].qz_loga[-1],
+            }
+            self.log_dict(log_l0_param_dict)
+
+        acc = (preds.argmax(dim=-1) == labels).float().mean()
         # Logs the accuracy per epoch to tensorboard (weighted average over batches)
         self.log("train_acc", acc, on_step=False, on_epoch=True)
-        self.log("train_loss", loss)
+
         return loss  # Return tensor to call ".backward" on
 
     def validation_step(self, batch, batch_idx):

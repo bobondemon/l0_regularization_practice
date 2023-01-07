@@ -1,4 +1,0 @@
-_target_:  sparsereg.model.maskedgooglenet.MaskedGoogleNet
-num_classes: 10
-act_fn_name: relu
-

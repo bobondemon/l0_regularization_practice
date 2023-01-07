@@ -12,6 +12,6 @@ callbacks:
     logging_interval: epoch
 logger:
   - _target_: pytorch_lightning.loggers.TensorBoardLogger
-    save_dir: ./tblog
+    save_dir: ./outputs/${train_or_test}/tblog
 gpus: 1
 max_epochs: 180
