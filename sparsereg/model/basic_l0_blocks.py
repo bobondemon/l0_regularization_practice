@@ -76,6 +76,9 @@ class L0Gate(nn.Module):
 
     def forward(self, input_):
         # input_: (n, c, h, w) for conv2d's output, or (n, dim_z) for dense layer's output
+        if self.fix_and_open_gate:
+            return input_
+
         mask_shape = input_.shape[:2]
         ndim = input_.ndim
         assert ndim >= 2, "[Error]: only support input_.ndim>=2"
@@ -94,11 +97,11 @@ class L0Gate(nn.Module):
         logits = math.log(x) - math.log(1 - x)
         return torch.sigmoid(logits * self.temperature - self.qz_loga).clamp(min=self.epsilon, max=1 - self.epsilon)
 
-    def mask_is_non_zero_probability(self):
+    def probability_of_mask_is_non_zero(self):
         # output, Pr(mask=\=0), has the same shape as self.qz_loga
         return 1 - self.cdf_sctretched_concrete(0)
 
     def regularization(self):
         # Is it WRONG with the signed value in the author's codes:
         # https://github.com/AMLab-Amsterdam/L0_regularization/blob/39a5fe68062c9b8540dba732339c1f5def451f1b/l0_layers.py#L69
-        return torch.sum(self.lamba * self.mask_is_non_zero_probability())
+        return torch.sum(self.lamba * self.probability_of_mask_is_non_zero())
