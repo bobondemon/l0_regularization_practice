@@ -14,10 +14,10 @@ hydra:
 proj_dir: .
 train_or_test: train
 
-ckpt_path: null
+ckpt_path: ???
 # ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/version_0/checkpoints/last.ckpt
-resume_training: false # will be ignored if ckpt_path is null
+resume_training: ??? # will be ignored if ckpt_path is null
 
 # Control using the L0-gate
 # if false (i.e.set gate params become learable), then `resume_training` should be false, or will pop Error
-without_using_gate: true
+without_using_gate: ???
