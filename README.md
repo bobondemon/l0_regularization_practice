@@ -14,11 +14,11 @@ Please see [xxx]() for detailed understanding about the math under the hood.
 
 We purne the output channels of a convolution layer:
 
-<img src="docs/l0_on_conv_output_channel.png" width=60% height=60%>
+<img src="docs/l0_on_conv_output_channel.png" width=90% height=90%>
 
 Then apply these `L0Gate` for purning channels in inception block:
 
-<img src="docs/inception_block_with_l0gate.png" width=40% height=40%>
+<img src="docs/inception_block_with_l0gate.png" width=60% height=60%>
 
 Finally, GoogleNet is then constructed by these *gated* inception blocks.
 
