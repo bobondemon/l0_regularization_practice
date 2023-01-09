@@ -1,8 +1,9 @@
 **TODO:**
 
-- [ ] coding the computation cost
-- [ ] report the results that shows the purning benifits, e.g.: same test accuracy but with lower computation cost
-- [ ] analize the purning parameters, $\ln\alpha$
+- [ ] coding the computation cost (FLOPS) and sparsity (model size reduction)
+- [ ] report the results that shows the pruning benifits, e.g.: same test accuracy but with lower computation cost
+- [ ] analize the pruning parameters, $\ln\alpha$
+- [ ] check the version of hydra, pytorch, lightning ...
 
 Apply L0 regularization ([Learning Sparse Neural Networks through L0 Regularization](https://arxiv.org/abs/1712.01312)) on CIFAR10 image classification task with GoogleNet model.
 
@@ -12,11 +13,11 @@ Also, the CIFAR10 training part including model structure and dataloader are mod
 # Introduction to L0 Regularization
 Please see [xxx]() for detailed understanding about the math under the hood.
 
-We purne the output channels of a convolution layer:
+We prune the output channels of a convolution layer:
 
 <img src="docs/l0_on_conv_output_channel.png" width=90% height=90%>
 
-Then apply these `L0Gate` for purning channels in inception block:
+Then apply these `L0Gate` for pruning channels in inception block:
 
 <img src="docs/inception_block_with_l0gate.png" width=60% height=60%>
 
