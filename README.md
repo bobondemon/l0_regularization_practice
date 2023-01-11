@@ -17,28 +17,28 @@ Also, the CIFAR10 training part including model structure and dataloader are mod
 Let $\theta$ be the parameters of our model, and we hope there is only a small number of non-zero parameters.
 Zero-norm measures this number so the L0 regularization term, $\mathcal{L}_{C0}$, can be defined as:
 
-$
+$$
 \begin{align}
 \mathcal{L}_{C0}(\theta)=\|\theta\|_0=\sum_{j=1}^{|\theta|}\mathbb{I}[\theta_j\neq0]
 \end{align}
-$
+$$
 
 Combined with entropy loss, $\mathcal{L}_E$, forms the final loss $\mathcal{L}$:
 
-$
+$$
 \begin{align}
 \mathcal{L}_E(\theta)=\frac{1}{N}\left(
 \sum_{i=1}^N\mathcal{L}(NN(x_i;\theta),y_i)
 \right) \\
 \mathcal{L}(\theta)=\mathcal{L}_E(\theta)+\lambda\mathcal{L}_{C0}(\theta)
 \end{align}
-$
+$$
 
 But $\mathcal{L}_{C0}$ in (1) is not differentiable. To cope with this issue, we apply a mask random variable $Z=\{Z_1,...,Z_{|\theta|}\}$ which each $Z_i$ follows a Bernoulli distributions with parameter $q_i$.
 
 Therefore, we can rewrite $\mathcal{L}_{C0}$ in equation (1) which has a closed form:
 
-$
+$$
 \begin{align}
 \mathcal{L}_{C0}(\theta, q)=\mathbb{E}_{Z\sim\text{Bernoulli}(q)}\left[
 \sum_{j=1}^{|\theta|}\mathbb{I}[\theta_j\odot Z_j\neq0]
@@ -46,11 +46,11 @@ $
 \sum_{j=1}^{|\theta|} Z_j
 \right] = \sum_j^{|\theta|} q_j
 \end{align}
-$
+$$
 
 Also, we should rewrite the entropy loss, $\mathcal{L}_E$, accordingly:
 
-$
+$$
 \begin{align}
 \mathcal{L}_E(\theta,q)=\mathbb{E}_{Z\sim\text{Bernoulli}(q)}\left[
 \frac{1}{N}\left(
@@ -59,7 +59,7 @@ $
 \right] \\
 \mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)+\lambda\mathcal{L}_{C0}(q)
 \end{align}
-$
+$$
 
 To find the gradient w.r.t. $q$ in Equation (5) is not trivial, since we cannot merely exchange the expectation and derivative operations.
 Fortunately, by using Gumbel-Softmax re-parameterization trick, we can make the random sampling (expectation on Bernoulli distribution) becomes independent on $q$.
@@ -125,18 +125,19 @@ tensorboard --logdir ./outputs/train/tblog/lightning_logs/
 
 # Results
 Recap the Loss function:
-$
+
+$$
 \mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)+\lambda\mathcal{L}_{C0}(q)
-$
+$$
 
 We know that $\lambda$ controls the importance of regulariztion term and hence the sparsity of the model.
 We define sparsity as:
 
-$
+$$
 \begin{align}
-\text{sparsity} = \frac{\text{\# non-zero parameters}}{\text{\# all parameters}}
+\text{sparsity} = \frac{\text{number of non-zero parameters}}{\text{number of all parameters}}
 \end{align}
-$
+$$
 
 |  GoogleNet   | Validation Accuracy | Test Accuracy | Sparsity |
 |  ----  | ----  |  ----  | ----  |
