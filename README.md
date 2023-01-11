@@ -17,26 +17,22 @@ Also, the CIFAR10 training part including model structure and dataloader are mod
 Let $\theta$ be the parameters of our model, and we hope there is only a small number of non-zero parameters.
 Zero-norm measures this number so the L0 regularization term, $\mathcal{L}_{C0}$, can be defined as:
 
-$$
-\begin{align}
+```math
 \mathcal{L}_{C0}(\theta)=\|\theta\|_0=\sum_{j=1}^{|\theta|}\mathbb{I}[\theta_j\neq0]
-\end{align}
-$$
+```
 
 Combined with entropy loss, $\mathcal{L}_E$, forms the final loss $\mathcal{L}$:
 
-$$
-\begin{align}
+```math
 \mathcal{L}_E(\theta)=\frac{1}{N}\left(
 \sum_{i=1}^N\mathcal{L}(NN(x_i;\theta),y_i)
 \right) \\
 \mathcal{L}(\theta)=\mathcal{L}_E(\theta)+\lambda\mathcal{L}_{C0}(\theta)
-\end{align}
-$$
+```
 
-But $\mathcal{L}_{C0}$ in (1) is not differentiable. To cope with this issue, we apply a mask random variable $Z=\{Z_1,...,Z_{|\theta|}\}$ which each $Z_i$ follows a Bernoulli distributions with parameter $q_i$.
+However, L0 regularization term is not differentiable. To cope with this issue, we apply a mask random variable $Z=\{Z_1,...,Z_{|\theta|}\}$ which each $Z_i$ follows a Bernoulli distributions with parameter $q_i$.
 
-Therefore, we can rewrite $\mathcal{L}_{C0}$ in equation (1) which has a closed form:
+Therefore, we can rewrite $\mathcal{L}_{C0}$ in a closed form:
 
 $$
 \begin{align}
@@ -61,11 +57,11 @@ $$
 \end{align}
 $$
 
-To find the gradient w.r.t. $q$ in Equation (5) is not trivial, since we cannot merely exchange the expectation and derivative operations.
-Fortunately, by using Gumbel-Softmax re-parameterization trick, we can make the random sampling (expectation on Bernoulli distribution) becomes independent on $q$.
-So that (5) becomes differentiable now.
+To find the gradient w.r.t. $q$ in the entropy loss is not trivial, since we cannot merely exchange the expectation and the differential operations.
+Fortunately, by using *Gumbel-Softmax re-parameterization trick*, we can make the random sampling (expectation on Bernoulli distribution) becomes independent on $q$.
+So that the entropy loss becomes differentiable now.
 
-That's it! NN parameters $\theta$ and mask parameter ($\ln\alpha$ in our code and this article) are all updated by backpropagation!
+That's it! NN parameters $\theta$ and the mask's parameters (`qz_loga` in code and $\ln\alpha$ in the following figures) are now can be updated by backpropagation!
 
 > Please see [xxx]() for detailed understanding about the math under the hood.
 
@@ -84,7 +80,7 @@ Finally, GoogleNet is then constructed by these *gated* inception blocks.
 
 # Usage
 
-## Main Package Version
+Main Package Version
 ```
 hydra-core             1.2.0
 pytorch-lightning      1.8.4.post0
@@ -95,7 +91,7 @@ torchvision            0.11.2+cu102
 ```
 
 ## How to Train
-### **Without** L0 Gating Layer
+**Without** L0 Gating Layer
 - Training from scratch
     ```
     python train.py ckpt_path=null resume_training=false without_using_gate=true
@@ -105,13 +101,11 @@ torchvision            0.11.2+cu102
     python train.py ckpt_path=path_of_ckpt/last.ckpt resume_training=true without_using_gate=true
     ```
 
-### **With** L0 Gating Layer
+**With** L0 Gating Layer
 - Training from scratch
     ```
     python train.py ckpt_path=null resume_training=false without_using_gate=false
     ```
-
-### 
 
 ## How to Test
 ```
