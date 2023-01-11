@@ -7,3 +7,4 @@ optimizer_name: Adam
 optimizer_hparams:
   lr: 1e-3
   weight_decay: 1e-4
+lambda_l0: 0.25

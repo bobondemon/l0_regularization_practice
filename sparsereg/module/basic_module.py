@@ -10,7 +10,7 @@ from sparsereg.model.basic_l0_blocks import L0Gate
 
 
 class CIFARModule(pl.LightningModule):
-    def __init__(self, model, optimizer_name, optimizer_hparams):
+    def __init__(self, model, optimizer_name, optimizer_hparams, lambda_l0=1.0):
         """
         Inputs:
             model_name - Name of the model/CNN to run. Used for creating the model (see function below)
@@ -64,7 +64,7 @@ class CIFARModule(pl.LightningModule):
         preds = self.model(imgs)
         reg = self.model.regularization()
         acc_loss = self.loss_module(preds, labels)
-        loss = acc_loss + reg
+        loss = acc_loss + self.hparams.lambda_l0 * reg
         loss_dict = {"train_loss": loss, "acc_loss": acc_loss, "reg": reg}
         self.log_dict(loss_dict)
 
@@ -97,3 +97,7 @@ class CIFARModule(pl.LightningModule):
         acc = (labels == preds).float().mean()
         # By default logs it per epoch (weighted average over batches), and returns it afterwards
         self.log("test_acc", acc)
+
+    def cal_sparsity(self):
+        l0_param_num, full_param_num = self.model.cal_full_and_l0_param_num()
+        return l0_param_num / full_param_num

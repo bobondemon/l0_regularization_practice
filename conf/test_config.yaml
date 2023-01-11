@@ -13,6 +13,6 @@ proj_dir: .
 train_or_test: test
 
 ckpt_path: ???
-# ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/train_from_scratch_with_l0/checkpoints/last.ckpt
+# ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/L0_lambda1.0_reg0.3151/checkpoints/last.ckpt
 
 without_using_gate: false # Neither true or false will not effect the l0gate parameters anyway

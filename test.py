@@ -20,13 +20,16 @@ def test(cfg: DictConfig) -> None:
     else:
         print("[Error]: ckpt_path is None")
 
-    test_dataloader = hydra.utils.instantiate(cfg.test_dataloader)
-
     # Test
+    test_dataloader = hydra.utils.instantiate(cfg.test_dataloader)
     print("[Info]: Start testing")
     test_result = trainer.test(module, dataloaders=test_dataloader, verbose=False)
     test_acc = test_result[0]["test_acc"]
     print(f"test_acc = {test_acc}")
+
+    # check the model sparsity (compression ratio)
+    sparsity = module.cal_sparsity()
+    print(f"[Info]: Estimated sparsity = {sparsity}")
 
 
 if __name__ == "__main__":

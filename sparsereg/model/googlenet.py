@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from sparsereg.model.basic_l0_blocks import L0Gate
-
+from sparsereg.helper.helper import conv2d_full_and_l0_param_num, dense_full_and_l0_param_num
 
 act_fn_by_name = {"tanh": nn.Tanh, "relu": nn.ReLU, "leakyrelu": nn.LeakyReLU, "gelu": nn.GELU}
 
@@ -20,6 +20,7 @@ class InceptionBlock(nn.Module):
             act_fn - Activation class constructor (e.g. nn.ReLU)
         """
         super().__init__()
+        self.hparams = SimpleNamespace(c_in=c_in, c_red=c_red, c_out=c_out, fix_and_open_gate=fix_and_open_gate)
 
         # 1x1 convolution branch
         self.conv_1x1 = nn.Sequential(
@@ -57,6 +58,35 @@ class InceptionBlock(nn.Module):
             act_fn(),
         )
         self.max_pool_gate = L0Gate(c_out["max"], fix_and_open_gate=fix_and_open_gate)
+
+    def get_cout_l0(self):
+        cout_l0 = 0
+        for m in self.modules():
+            if type(m) == L0Gate:
+                cout_l0 += torch.sum(m.get_gate_mask_when_inferencing() > 0)
+        return cout_l0
+
+    def cal_full_and_l0_param_num(self, c_in_l0):
+        # MANUALLY setting the hparam to calculate the sparsity
+        c_in, c_red, c_out = self.hparams.c_in, self.hparams.c_red, self.hparams.c_out
+        total_l0_and_full_param_num = torch.tensor([0, 0])
+        # 1x1 convolution branch
+        conv_1x1_l0 = torch.sum(self.conv_1x1_gate.get_gate_mask_when_inferencing() > 0)
+        total_l0_and_full_param_num += conv2d_full_and_l0_param_num(c_in, c_out["1x1"], 1, c_in_l0, conv_1x1_l0)
+        # 3x3 convolution branch
+        total_l0_and_full_param_num += torch.tensor([c_in_l0 * c_red["3x3"], c_in * c_red["3x3"]])  # 1x1 conv
+        conv_3x3_l0 = torch.sum(self.conv_3x3_gate.get_gate_mask_when_inferencing() > 0)
+        total_l0_and_full_param_num += conv2d_full_and_l0_param_num(
+            c_red["3x3"], c_out["3x3"], 3, c_red["3x3"], conv_3x3_l0
+        )
+        # 5x5 convolution branch
+        total_l0_and_full_param_num += torch.tensor([c_in_l0 * c_red["5x5"], c_in * c_red["5x5"]])  # 1x1 conv
+        conv_5x5_l0 = torch.sum(self.conv_5x5_gate.get_gate_mask_when_inferencing() > 0)
+        total_l0_and_full_param_num += conv2d_full_and_l0_param_num(
+            c_red["5x5"], c_out["5x5"], 5, c_red["5x5"], conv_5x5_l0
+        )
+        # Max-pool branch: No parameters
+        return total_l0_and_full_param_num
 
     def forward(self, x):
         x_1x1 = self.conv_1x1_gate(self.conv_1x1(x))
@@ -181,3 +211,23 @@ class GoogleNet(nn.Module):
 
         # print(reg, dim)
         return reg / dim
+
+    def cal_full_and_l0_param_num(self):
+        # MANUALLY setting the hparam to calculate the sparsity
+        total_l0_and_full_param_num = torch.tensor([0, 0])
+        # self.input_net:
+        total_l0_and_full_param_num += 3 * 64 * 3 * 3 + 64
+
+        c_in_l0 = 64
+        # Stacking inception blocks:
+        for inception_block in self.inception_blocks:
+            if type(inception_block) == InceptionBlock:
+                total_l0_and_full_param_num += inception_block.cal_full_and_l0_param_num(c_in_l0)
+                c_in_l0 = inception_block.get_cout_l0()
+
+        # Mapping to classification output
+        # The full dense layer matrix: (32+64+16+16)*self.hparams.num_classes
+        total_l0_and_full_param_num += dense_full_and_l0_param_num(
+            32 + 64 + 16 + 16, self.hparams.num_classes, c_in_l0, self.hparams.num_classes
+        )
+        return total_l0_and_full_param_num
