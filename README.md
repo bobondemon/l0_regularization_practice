@@ -30,7 +30,7 @@ Combined with entropy loss, $\mathcal{L}_E$, forms the final loss $\mathcal{L}$:
 \mathcal{L}(\theta)=\mathcal{L}_E(\theta)+\lambda\mathcal{L}_{C0}(\theta)
 ```
 
-However, L0 regularization term is not differentiable. To cope with this issue, we apply a mask random variable $Z=\{Z_1,...,Z_{|\theta|}\}$ which each $Z_i$ follows a Bernoulli distributions with parameter $q_i$.
+However, L0 regularization term is not differentiable. To cope with this issue, we apply a mask random variable $Z=\{Z_1,...,Z_{|\theta|}\}$ which each $Z_i$ follows a Bernoulli distribution with parameter $q_i$.
 
 Therefore, we can rewrite $\mathcal{L}_{C0}$ in a closed form:
 
@@ -142,5 +142,9 @@ $$
 
 The results make sense that more pruned paramters harms more accuracy.
 We then can fine-tune $\lambda$ to control the compression rate (sparsity) in demand.
+
+In addition, we show the values of $\mathcal{L}_{C0}$ during training with different $\lambda$ in below:
+
+<img src="docs/L_C0.png" width=60% height=60%>
 
 The drawback of L0 implementation in this repo is that training with L0 reg seems ~2 times slower than without L0. Maybe this is the next step of improvement. Moreover, I think unstructure pruning is a good way to get lower compression rate while keeping similar accuracy.
