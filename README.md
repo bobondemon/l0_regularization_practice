@@ -129,16 +129,16 @@ We define sparsity as:
 
 $$
 \begin{align}
-\text{sparsity} = \frac{\text{number of non-zero parameters}}{\text{number of all parameters}}
+\text{sparsity} = \frac{\text{number of ZERO parameters}}{\text{number of ALL parameters}}
 \end{align}
 $$
 
 |  GoogleNet   | Validation Accuracy | Test Accuracy | Sparsity |
 |  ----  | ----  |  ----  | ----  |
-| NO L0  | 90.12% | 89.57% | 1.0 |
-| with L0, lambda=1.0 | 83.2% | 82.79% | 0.45 |
-| with L0, lambda=0.5 | 86.9% | 86.56% | 0.78 |
-| with L0, lambda=0.25 | 88.66% | 87.87% | 0.94 |
+| NO L0  | 90.12% | 89.57% | 0.0 |
+| with L0, lambda=0.25 | 88.66% | 87.87% | 0.06 |
+| with L0, lambda=0.5 | 86.9% | 86.56% | 0.22 |
+| with L0, lambda=1.0 | 83.2% | 82.79% | 0.55 |
 
 The results make sense that more pruned paramters harms more accuracy.
 We then can fine-tune $\lambda$ to control the compression rate (sparsity) in demand.
