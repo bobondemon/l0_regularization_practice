@@ -94,7 +94,7 @@ torchvision            0.11.2+cu102
 **Without** L0 Gating Layer
 - Training from scratch
     ```
-    python train.py ckpt_path=null resume_training=false without_using_gate=true
+    python train.py ckpt_path=null resume_training=false without_using_gate=true 
     ```
 - Resume training from ckpt
     ```
@@ -104,7 +104,7 @@ torchvision            0.11.2+cu102
 **With** L0 Gating Layer
 - Training from scratch
     ```
-    python train.py ckpt_path=null resume_training=false without_using_gate=false
+    python train.py ckpt_path=null resume_training=false without_using_gate=false lambda_l0=1.0
     ```
 
 ## How to Test

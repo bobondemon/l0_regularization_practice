@@ -21,3 +21,5 @@ resume_training: ??? # will be ignored if ckpt_path is null
 # Control using the L0-gate
 # if false (i.e.set gate params become learable), then `resume_training` should be false, or will pop Error
 without_using_gate: ???
+
+lambda_l0: 1.0
