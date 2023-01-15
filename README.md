@@ -18,6 +18,11 @@ torchvision            0.11.2+cu102
 
 ## How to Train
 **Without** L0 Gating Layer
+
+$$
+\mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)
+$$
+
 - Training from scratch
     ```
     python train.py ckpt_path=null resume_training=false without_using_gate=true 
@@ -28,16 +33,21 @@ torchvision            0.11.2+cu102
     ```
 
 **With** L0 Gating Layer
+
+$$
+\mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)+\lambda\mathcal{L}_{C0}(q)
+$$
+
 - Training from scratch
     ```
     python train.py ckpt_path=null resume_training=false without_using_gate=false lambda_l0=1.0
     ```
-- Init by a pre-trained model (without L0), then fine tune with L0 regularization
+- $\theta$ is inited by a pre-trained model (without L0), then fine tune with L0 regularization
     ```
     python train.py ckpt_path=path_of_ckpt/last.ckpt resume_training=false without_using_gate=false lambda_l0=20.0 droprate_init=0.05
     ```
-    Setting `droprate_init=0.05` in order to start training with the gate *open*, since the pre-trained model is trained without L0
-    We make `lambda_l0` larger than the setting of "training from scratch", becasue the entropy loss is well trained by pre-trained model, and we want to emphasize the L0 loss
+    Setting `droprate_init=0.05` in order to start training with the gate *open* (since the pre-trained model is trained without L0).
+    Moreover, we make `lambda_l0` (weight of regularization) larger than the one in "training from scratch", this is becasue the entropy loss ( $\mathcal{L}_E$ ) is well trained by the pre-trained model, so we can emphasize the L0 loss.
 
 
 ## How to Test
@@ -70,7 +80,7 @@ $$
 |  ----  | ----  |  ----  | ----  |
 | (1) NO L0  | 90.12% | 89.57% | 0.0 |
 | (2) NN $\theta$ and L0 train from scratch, lambda=0.25 | 88.66% | 87.87% | 0.06 |
-| (3) Init NN by "NO L0" then fine tune with L0 , lambda=10. | 90.44% | 90.00% | 0.10 |
+| (3) Init NN by "NO L0" then fine tune with L0 , lambda=10. | **90.44%** | **90.00%** | 0.10 |
 | (4) NN $\theta$ and L0 train from scratch, lambda=0.5 | 86.9% | 86.56% | 0.22 |
 | (5) Init NN by "NO L0" then fine tune with L0 , lambda=20. | 88.8% | 88.62% | 0.39 |
 | (6) NN $\theta$ and L0 train from scratch, lambda=1.0 | 83.2% | 82.79% | 0.55 |
