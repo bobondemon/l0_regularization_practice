@@ -16,3 +16,6 @@ ckpt_path: ???
 # ckpt_path: ${proj_dir}/outputs/train/tblog/lightning_logs/L0_lambda1.0_reg0.3151/checkpoints/last.ckpt
 
 without_using_gate: false # Neither true or false will not effect the l0gate parameters anyway
+# Won't affect the test results, just for parsing model
+lambda_l0: 0.5
+droprate_init: 0.5

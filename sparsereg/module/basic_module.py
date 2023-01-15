@@ -10,13 +10,14 @@ from sparsereg.model.basic_l0_blocks import L0Gate
 
 
 class CIFARModule(pl.LightningModule):
-    def __init__(self, model, optimizer_name, optimizer_hparams, lambda_l0=1.0):
+    def __init__(self, model, optimizer_name, optimizer_hparams, multi_stepLR_hparams, lambda_l0=1.0):
         """
         Inputs:
             model_name - Name of the model/CNN to run. Used for creating the model (see function below)
             model_hparams - Hyperparameters for the model, as dictionary.
             optimizer_name - Name of the optimizer to use. Currently supported: Adam, SGD
             optimizer_hparams - Hyperparameters for the optimizer, as dictionary. This includes learning rate, weight decay, etc.
+            multi_stepLR_hparams - Hyperparameters for the `MultiStepLR`
         """
         super().__init__()
         # Exports the hyperparameters to a YAML file, and create "self.hparams" namespace
@@ -33,6 +34,8 @@ class CIFARModule(pl.LightningModule):
         self.loss_module = nn.CrossEntropyLoss()
         # Example input for visualizing the graph in Tensorboard
         self.example_input_array = torch.zeros((1, 3, 32, 32), dtype=torch.float32)
+
+        print(f"===== self.hparams.multi_stepLR_hparams={self.hparams.multi_stepLR_hparams}")
 
     def on_train_start(self) -> None:
         if not self.model.fix_and_open_gate:
@@ -55,7 +58,7 @@ class CIFARModule(pl.LightningModule):
             assert False, f'Unknown optimizer: "{self.hparams.optimizer_name}"'
 
         # We will reduce the learning rate by 0.1 after 100 and 150 epochs
-        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1)
+        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, **self.hparams.multi_stepLR_hparams)
         return [optimizer], [scheduler]
 
     def training_step(self, batch, batch_idx):
@@ -100,4 +103,4 @@ class CIFARModule(pl.LightningModule):
 
     def cal_sparsity(self):
         l0_param_num, full_param_num = self.model.cal_full_and_l0_param_num()
-        return l0_param_num / full_param_num
+        return 1.0 - l0_param_num / full_param_num

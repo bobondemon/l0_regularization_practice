@@ -11,7 +11,7 @@ act_fn_by_name = {"tanh": nn.Tanh, "relu": nn.ReLU, "leakyrelu": nn.LeakyReLU, "
 
 
 class InceptionBlock(nn.Module):
-    def __init__(self, c_in, c_red: dict, c_out: dict, act_fn, fix_and_open_gate=True):
+    def __init__(self, c_in, c_red: dict, c_out: dict, act_fn, fix_and_open_gate=True, droprate_init=0.5):
         """
         Inputs:
             c_in - Number of input feature maps from the previous layers
@@ -26,7 +26,7 @@ class InceptionBlock(nn.Module):
         self.conv_1x1 = nn.Sequential(
             nn.Conv2d(c_in, c_out["1x1"], kernel_size=1), nn.BatchNorm2d(c_out["1x1"]), act_fn()
         )
-        self.conv_1x1_gate = L0Gate(c_out["1x1"], fix_and_open_gate=fix_and_open_gate)
+        self.conv_1x1_gate = L0Gate(c_out["1x1"], fix_and_open_gate=fix_and_open_gate, droprate_init=droprate_init)
 
         # 3x3 convolution branch
         self.conv_3x3 = nn.Sequential(
@@ -37,7 +37,7 @@ class InceptionBlock(nn.Module):
             nn.BatchNorm2d(c_out["3x3"]),
             act_fn(),
         )
-        self.conv_3x3_gate = L0Gate(c_out["3x3"], fix_and_open_gate=fix_and_open_gate)
+        self.conv_3x3_gate = L0Gate(c_out["3x3"], fix_and_open_gate=fix_and_open_gate, droprate_init=droprate_init)
 
         # 5x5 convolution branch
         self.conv_5x5 = nn.Sequential(
@@ -48,7 +48,7 @@ class InceptionBlock(nn.Module):
             nn.BatchNorm2d(c_out["5x5"]),
             act_fn(),
         )
-        self.conv_5x5_gate = L0Gate(c_out["5x5"], fix_and_open_gate=fix_and_open_gate)
+        self.conv_5x5_gate = L0Gate(c_out["5x5"], fix_and_open_gate=fix_and_open_gate, droprate_init=droprate_init)
 
         # Max-pool branch
         self.max_pool = nn.Sequential(
@@ -57,7 +57,7 @@ class InceptionBlock(nn.Module):
             nn.BatchNorm2d(c_out["max"]),
             act_fn(),
         )
-        self.max_pool_gate = L0Gate(c_out["max"], fix_and_open_gate=fix_and_open_gate)
+        self.max_pool_gate = L0Gate(c_out["max"], fix_and_open_gate=fix_and_open_gate, droprate_init=droprate_init)
 
     def get_cout_l0(self):
         cout_l0 = 0
@@ -98,13 +98,13 @@ class InceptionBlock(nn.Module):
 
 
 class GoogleNet(nn.Module):
-    def __init__(self, num_classes=10, act_fn_name="relu", fix_and_open_gate=True, **kwargs):
+    def __init__(self, num_classes=10, act_fn_name="relu", fix_and_open_gate=True, droprate_init=0.5, **kwargs):
         super().__init__()
         self.hparams = SimpleNamespace(
             num_classes=num_classes, act_fn_name=act_fn_name, act_fn=act_fn_by_name[act_fn_name]
         )
         self.fix_and_open_gate = fix_and_open_gate
-        self.inception_block = partial(InceptionBlock, fix_and_open_gate=fix_and_open_gate)
+        self.inception_block = partial(InceptionBlock, fix_and_open_gate=fix_and_open_gate, droprate_init=droprate_init)
         self._create_network()
         self._init_params()
 

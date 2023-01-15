@@ -7,4 +7,11 @@ optimizer_name: Adam
 optimizer_hparams:
   lr: 1e-3
   weight_decay: 1e-4
+multi_stepLR_hparams:
+  # Init by pre-trained model, then fine tuning with L0 term
+  milestones: [10, 60, 100, 130, 160]
+  gamma: 0.5
+  # Training from scratch parameters
+  # milestones: [100, 150]
+  # gamma: 0.1
 lambda_l0: ${lambda_l0}

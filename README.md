@@ -1,10 +1,3 @@
-**TODO:**
-
-- [ ] coding the computation cost (FLOPS)
-- [x] coding the sparsity (model size reduction)
-- [x] report the results that shows the pruning benifits, e.g.: same test accuracy but with lower computation cost
-- [ ] analize the pruning parameters, $\ln\alpha$
-- [x] check the version of hydra, pytorch, lightning ...
 
 Apply L0 regularization ([Learning Sparse Neural Networks through L0 Regularization](https://arxiv.org/abs/1712.01312)) on CIFAR10 image classification task with GoogleNet model.
 
@@ -63,7 +56,7 @@ So that the entropy loss becomes differentiable now.
 
 That's it! NN parameters $\theta$ and the mask's parameters (`qz_loga` in code and $\ln\alpha$ in the following figures) are now can be updated by backpropagation!
 
-> Please see [xxx]() for detailed understanding about the math under the hood.
+> Please see [[L0 Regularization 詳細攻略](https://bobondemon.github.io/2023/01/15/L0-Regularization-%E8%A9%B3%E7%B4%B0%E6%94%BB%E7%95%A5/)] for detailed understanding about the math under the hood. Sorry only in Mandarin.
 
 ## Structure pruning with L0 norm
 
@@ -106,6 +99,13 @@ torchvision            0.11.2+cu102
     ```
     python train.py ckpt_path=null resume_training=false without_using_gate=false lambda_l0=1.0
     ```
+- Init by a pre-trained model (without L0), then fine tune with L0 regularization
+    ```
+    python train.py ckpt_path=path_of_ckpt/last.ckpt resume_training=false without_using_gate=false lambda_l0=20.0 droprate_init=0.05
+    ```
+    Setting `droprate_init=0.05` in order to start training with the gate *open*, since the pre-trained model is trained without L0
+    We make `lambda_l0` larger than the setting of "training from scratch", becasue the entropy loss is well trained by pre-trained model, and we want to emphasize the L0 loss
+
 
 ## How to Test
 ```
@@ -135,15 +135,25 @@ $$
 
 |  GoogleNet   | Validation Accuracy | Test Accuracy | Sparsity |
 |  ----  | ----  |  ----  | ----  |
-| NO L0  | 90.12% | 89.57% | 0.0 |
-| with L0, lambda=0.25 | 88.66% | 87.87% | 0.06 |
-| with L0, lambda=0.5 | 86.9% | 86.56% | 0.22 |
-| with L0, lambda=1.0 | 83.2% | 82.79% | 0.55 |
+| (1) NO L0  | 90.12% | 89.57% | 0.0 |
+| (2) NN $\theta$ and L0 train from scratch, lambda=0.25 | 88.66% | 87.87% | 0.06 |
+| (3) Init NN by "NO L0" then fine tune with L0 , lambda=10. | 90.44% | 90.00% | 0.10 |
+| (4) NN $\theta$ and L0 train from scratch, lambda=0.5 | 86.9% | 86.56% | 0.22 |
+| (5) Init NN by "NO L0" then fine tune with L0 , lambda=20. | 88.8% | 88.62% | 0.39 |
+| (6) NN $\theta$ and L0 train from scratch, lambda=1.0 | 83.2% | 82.79% | 0.55 |
+| (7) Init NN by "NO L0" then fine tune with L0 , lambda=30. | 86.5% | 85.88% | 0.64 |
+| (8) Init NN by "NO L0" then fine tune with L0 , lambda=50. | 80.78% | 80.22% | 0.815 |
 
-The results make sense that more pruned paramters harms more accuracy.
-We then can fine-tune $\lambda$ to control the compression rate (sparsity) in demand.
+- "NO L0": trainig from scratch with NO L0 regularization term
+- "NN $\theta$ and L0 train from scratch": NN parameters $\theta$ and L0 $\ln\alpha$ are traing from scratch together
+- "Init NN by 'NO L0' then fine tune with L0": $\theta$ is inited by "NO L0" model, then by setting `droprate_init=0.05` (start training with the gate *open*), we fine tune $\theta$ and L0 $\ln\alpha$ together
 
-In addition, we show the values of $\mathcal{L}_{C0}$ during training with different $\lambda$ in below:
+It is obvious that more pruned paramters harms more accuracy. So we can fine-tune $\lambda$ to control the compression rate (sparsity) in demand.
+
+Moreover, by comparing (5) and (2), we can see that with a good initailzation of NN $\theta$, we can get a better sparsity with similar accuracy than just training from scratch.
+> Also see (7) and (6)
+
+Finally, we show the values of $\mathcal{L}_{C0}$ in (2), (4), and (6) during training with different $\lambda$ below:
 
 <img src="docs/L_C0.png" width=60% height=60%>
 
