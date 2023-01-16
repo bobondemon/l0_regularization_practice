@@ -17,10 +17,12 @@ torchvision            0.11.2+cu102
 ```
 
 ## How to Train
+Define $\theta$ and $q$ are the parameters of NN and L0 Gating Layer respectively.
+
 **Without** L0 Gating Layer
 
 $$
-\mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)
+\mathcal{L}(\theta)=\mathcal{L}_E(\theta)
 $$
 
 - Training from scratch
