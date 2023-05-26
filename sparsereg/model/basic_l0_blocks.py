@@ -70,8 +70,9 @@ class L0Gate(nn.Module):
             pi = torch.sigmoid(self.qz_loga).view(1, mask_shape[1])
             return F.hardtanh(pi * (self.limit_b - self.limit_a) + self.limit_a, min_val=0, max_val=1)
 
+    @torch.no_grad()
     def get_gate_mask_when_inferencing(self):
-        pi = torch.sigmoid(self.qz_loga)
+        pi = torch.sigmoid(self.qz_loga).clone().detach()
         return F.hardtanh(pi * (self.limit_b - self.limit_a) + self.limit_a, min_val=0, max_val=1)
 
     def forward(self, input_):
