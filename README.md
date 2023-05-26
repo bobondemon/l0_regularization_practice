@@ -21,9 +21,9 @@ Define $\theta$ and $q$ are the parameters of NN and L0 Gating Layer respectivel
 
 **Without** L0 Gating Layer
 
-$$
+```math
 \mathcal{L}(\theta)=\mathcal{L}_E(\theta)
-$$
+```
 
 - Training from scratch
     ```
@@ -36,9 +36,9 @@ $$
 
 **With** L0 Gating Layer
 
-$$
+```math
 \mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)+\lambda\mathcal{L}_{C0}(q)
-$$
+```
 
 - Training from scratch
     ```
@@ -65,18 +65,18 @@ tensorboard --logdir ./outputs/train/tblog/lightning_logs/
 # Results
 Recap the Loss function:
 
-$$
+```math
 \mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)+\lambda\mathcal{L}_{C0}(q)
-$$
+```
 
 We know that $\lambda$ controls the importance of regulariztion term and hence the sparsity of the model.
 We define sparsity as:
 
-$$
+```math
 \begin{align}
 \text{sparsity} = \frac{\text{number of ZERO parameters}}{\text{number of ALL parameters}}
 \end{align}
-$$
+```
 
 |  GoogleNet (sorted by Sparsity)   | Validation Accuracy | Test Accuracy | Sparsity |
 |  ----  | ----  |  ----  | ----  |
@@ -127,7 +127,7 @@ However, L0 regularization term is not differentiable. To cope with this issue, 
 
 Therefore, we can rewrite $\mathcal{L}_{C0}$ in a closed form:
 
-$$
+```math
 \begin{align}
 \mathcal{L}_{C0}(\theta, q)=\mathbb{E}_{Z\sim\text{Bernoulli}(q)}\left[
 \sum_{j=1}^{|\theta|}\mathbb{I}[\theta_j\odot Z_j\neq0]
@@ -135,11 +135,11 @@ $$
 \sum_{j=1}^{|\theta|} Z_j
 \right] = \sum_j^{|\theta|} q_j
 \end{align}
-$$
+```
 
 Also, we should rewrite the entropy loss, $\mathcal{L}_E$, accordingly:
 
-$$
+```math
 \begin{align}
 \mathcal{L}_E(\theta,q)=\mathbb{E}_{Z\sim\text{Bernoulli}(q)}\left[
 \frac{1}{N}\left(
@@ -148,7 +148,7 @@ $$
 \right] \\
 \mathcal{L}(\theta,q)=\mathcal{L}_E(\theta,q)+\lambda\mathcal{L}_{C0}(q)
 \end{align}
-$$
+```
 
 To find the gradient w.r.t. $q$ in the entropy loss is not trivial, since we cannot merely exchange the expectation and the differential operations.
 Fortunately, by using *Gumbel-Softmax re-parameterization trick*, we can make the random sampling (expectation on Bernoulli distribution) becomes independent on $q$.
